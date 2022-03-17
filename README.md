@@ -1,2 +1,2 @@
 # AWSdsr
-AWS profile objects describer
+AWSdsr - утилитка для AWS, листинг объектов в аккаунте по всем доступным регионам.
