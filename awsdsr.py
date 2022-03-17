@@ -1,3 +1,5 @@
+#!/usr/local/bin/python3
+
 from curses.ascii import NUL
 import os
 import sys
@@ -12,8 +14,6 @@ class bcolors:
 	WARN = '\033[43m\033[30m'
 	OKGREEN = '\033[92m'
 	ENDC = '\033[0m'
-
-ERASE_LINE = '                                                           \r'
 
 # Key Options
 def createParser():
@@ -91,13 +91,26 @@ class getAwsObj:
 						eipList.append(f'{bcolors.WARN}[WARN]{bcolors.ENDC}[{region}]\n{eipStringList[0]}\t{bcolors.WARN}not associated{bcolors.ENDC}\t{eipStringList[2]}\t{eipStringList[3]}\n')
 					else:
 						eipList.append(f'{eipDiscoveredList[i]}\n')
-
-
-
 			#	eipList.append(f'[{region}]\n' + f'{eipDiscovered}\n')
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
 		return eipList
+# Snapshots
+	def snapshots(self, profile_, regions_):
+		dot = ''
+		snapshotList = []
+		for region in regions_:
+			searchStr = '| Searching Snapshots ' + dot
+			sys.stdout.write(searchStr + '\r')
+			snapshotDiscovered = subprocess.check_output("aws ec2 describe-snapshots --owner-id self --query 'Snapshots[*].{SnapshotId:SnapshotId,VolumeSize:VolumeSize,Time:StartTime}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
+			if snapshotDiscovered:
+				if snapshotDiscovered.count('\n') >= 2 and namespace.freetire:
+					snapshotList.append(f'{bcolors.WARN}[WARN]{bcolors.ENDC}[{region}] ! possible overrun freetire !\n' + f'{snapshotDiscovered} \n')
+				else:
+					snapshotList.append(f'[{region}]\n' + f'{snapshotDiscovered}\n')
+			dot += '.'
+		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
+		return snapshotList
 
 if __name__ == '__main__':
 
