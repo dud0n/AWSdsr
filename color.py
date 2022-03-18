@@ -37,23 +37,4 @@
 ##
 #print('\033[43m\033[30m TEXT \033[0m')
 
-import time
-import sys
-
-eipList = []
-eipStringList = []
-
-eipDiscovered = 'eipalloc-0515386b6d9e01fff	None	test	54.88.193.11\neipalloc-8015386b6d9e01ddd	i-45238759873	test2	100.99.193.7\n'
-eipDiscoveredList = eipDiscovered[:-1].split('\n')
-for i in range(len(eipDiscoveredList)):
-	eipStringList = eipDiscoveredList[i].split('\t')
-	if eipStringList[1] == 'None':
-		#eipList.append(f'{eipDiscoveredList[i]} !!! not associated \n')
-		eipList.append(f'{eipStringList[0]}\tnot associated\t{eipStringList[2]}\t{eipStringList[3]}\n')
-	else:
-		eipList.append(f'{eipDiscoveredList[i]}\n')
-
-for res in eipList:
-	sys.stderr.write(res)
-
 

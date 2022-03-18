@@ -15,7 +15,7 @@
 				"--profile",
 				"admin",
 				"-o",
-				"vpc"
+				"snapshots"
 			]
 		}
 	]

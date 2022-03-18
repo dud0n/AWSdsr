@@ -54,7 +54,7 @@ class getAwsObj:
 				if instanceDiscovered.count('\n') >= 2 and namespace.freetire:
 					instanceList.append(f'{bcolors.WARN}[WARN]{bcolors.ENDC}[{region}] ! possible overrun freetire !\n' + f'{instanceDiscovered} \n')
 				else:
-					instanceList.append(f'[{region}]\n' + f'{instanceDiscovered}\n')
+					instanceList.append(f'[{region}]\n{instanceDiscovered}\n')
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
 		return instanceList
@@ -67,7 +67,7 @@ class getAwsObj:
 			sys.stdout.write(searchStr + '\r')
 			vpcDiscovered = subprocess.check_output("aws ec2 describe-vpcs --query 'Vpcs[*].{VpcId:VpcId,Name:Tags[?Key==`Name`].Value|[0],CidrBlock:CidrBlock}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
 			if vpcDiscovered:
-				vpcList.append(f'[{region}]\n' + f'{vpcDiscovered}\n')
+				vpcList.append(f'[{region}]\n{vpcDiscovered}\n')
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
 		return vpcList
@@ -80,18 +80,17 @@ class getAwsObj:
 		for region in regions_:
 			searchStr = '| Searching Elastic IP ' + dot
 			sys.stdout.write(searchStr + '\r')
-			eipDiscovered = subprocess.check_output("aws ec2 describe-addresses --query 'Addresses[*].{AllocationId:AllocationId,Name:Tags[?Key==`Name`].Value|[0],InstanceId:InstanceId,PublicIp:PublicIp}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
-			#print(eipDiscovered)
+			eipDiscovered = subprocess.check_output("aws ec2 describe-addresses --query 'Addresses[*].{AllocationId:AllocationId,InstanceId:InstanceId,Name:Tags[?Key==`Name`].Value|[0],PublicIp:PublicIp}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
 			if eipDiscovered:
 				eipDiscoveredList = eipDiscovered[:-1].split('\n')
+				newEipDiscoveredStr = f'[{region}]\n'
 				for i in range(len(eipDiscoveredList)):
 					eipStringList = eipDiscoveredList[i].split('\t')
 					if eipStringList[1] == 'None':
-						#eipList.append(f'{eipDiscoveredList[i]} !!! not associated \n')
-						eipList.append(f'{bcolors.WARN}[WARN]{bcolors.ENDC}[{region}]\n{eipStringList[0]}\t{bcolors.WARN}not associated{bcolors.ENDC}\t{eipStringList[2]}\t{eipStringList[3]}\n')
+						newEipDiscoveredStr += f'{eipStringList[0]}\t{bcolors.WARN}not associated{bcolors.ENDC}\t{eipStringList[2]}\t{eipStringList[3]}\n'
 					else:
-						eipList.append(f'{eipDiscoveredList[i]}\n')
-			#	eipList.append(f'[{region}]\n' + f'{eipDiscovered}\n')
+						newEipDiscoveredStr += f'{eipDiscoveredList[i]}\n'
+				eipList.append(newEipDiscoveredStr)
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
 		return eipList
@@ -99,18 +98,26 @@ class getAwsObj:
 	def snapshots(self, profile_, regions_):
 		dot = ''
 		snapshotList = []
+		snapshotDiscoveredList = []
 		for region in regions_:
 			searchStr = '| Searching Snapshots ' + dot
 			sys.stdout.write(searchStr + '\r')
-			snapshotDiscovered = subprocess.check_output("aws ec2 describe-snapshots --owner-id self --query 'Snapshots[*].{SnapshotId:SnapshotId,VolumeSize:VolumeSize,Time:StartTime}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
+			snapshotDiscovered = subprocess.check_output("aws ec2 describe-snapshots --owner-id self --query 'Snapshots[*].{SnapshotId:SnapshotId,Time:StartTime,VolumeSize:VolumeSize}' --profile %s --region %s --output text" % (profile_, region), shell = True).decode()
 			if snapshotDiscovered:
-				if snapshotDiscovered.count('\n') >= 2 and namespace.freetire:
-					snapshotList.append(f'{bcolors.WARN}[WARN]{bcolors.ENDC}[{region}] ! possible overrun freetire !\n' + f'{snapshotDiscovered} \n')
-				else:
-					snapshotList.append(f'[{region}]\n' + f'{snapshotDiscovered}\n')
+				snapshotDiscoveredList = snapshotDiscovered[:-1].split('\n')
+				newSnapshotDiscoveredStr = f'[{region}]\n'
+				for i in range(len(snapshotDiscoveredList)):
+					snapshotStringList = snapshotDiscoveredList[i].split('\t')
+					if int(snapshotStringList[2]) >= 5 and namespace.freetire:
+						newSnapshotDiscoveredStr += f'{snapshotStringList[0]}\t{snapshotStringList[1]}\t{snapshotStringList[2]} >= 5Gb included in freetire\n'
+					else:
+						newSnapshotDiscoveredStr += f'{snapshotDiscoveredList[i]}\n'
+				snapshotList.append(newSnapshotDiscoveredStr)
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')
 		return snapshotList
+
+###
 
 if __name__ == '__main__':
 
@@ -125,8 +132,6 @@ if __name__ == '__main__':
 	REGIONS_command = "aws --region us-east-1 ec2 describe-regions --output text --profile %s | cut -f4" % (namespace.profile)
 	regionsList = subprocess.check_output(REGIONS_command, shell = True).decode().split()
 	sys.stdout.write(bcolors.OKGREEN + 'Profile: ' + namespace.profile + '@' + subprocess.check_output(USER_ID_command, shell = True).decode() + bcolors.ENDC + '\n')
-
-	#print(list(filter(lambda y: '__' not in y, dir(getAwsObj))))
 
 	awsObj = getAwsObj()
 
