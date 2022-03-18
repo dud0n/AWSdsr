@@ -97,6 +97,7 @@ class getAwsObj:
 # Snapshots
 	def snapshots(self, profile_, regions_):
 		dot = ''
+		snapshotSum = 0
 		snapshotList = []
 		snapshotDiscoveredList = []
 		for region in regions_:
@@ -108,10 +109,13 @@ class getAwsObj:
 				newSnapshotDiscoveredStr = f'[{region}]\n'
 				for i in range(len(snapshotDiscoveredList)):
 					snapshotStringList = snapshotDiscoveredList[i].split('\t')
+					snapshotSum += int(snapshotStringList[2])
 					if int(snapshotStringList[2]) >= 5 and namespace.freetire:
-						newSnapshotDiscoveredStr += f'{snapshotStringList[0]}\t{snapshotStringList[1]}\t{snapshotStringList[2]} >= 5Gb included in freetire\n'
+						newSnapshotDiscoveredStr += f'{snapshotDiscoveredList[i]} {bcolors.WARN}>= 5Gb freetire overuse{bcolors.ENDC}\n'
 					else:
 						newSnapshotDiscoveredStr += f'{snapshotDiscoveredList[i]}\n'
+				if namespace.freetire and snapshotSum > 5:
+					newSnapshotDiscoveredStr += f'{bcolors.WARN}Sum of snapshots overuse freetire -> {snapshotSum}Gb{bcolors.ENDC}\n'
 				snapshotList.append(newSnapshotDiscoveredStr)
 			dot += '.'
 		sys.stdout.write(f'{lineCleaner(len(searchStr))}\r')

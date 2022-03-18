@@ -3,6 +3,15 @@
 import time
 import sys
 
+# Color class for console
+class bcolors:
+	ERR	 = '\033[41m\033[30m'
+	INFO = '\033[42m\033[30m'
+	OBJ = '\033[47m\033[30m'
+	WARN = '\033[43m\033[30m'
+	OKGREEN = '\033[92m'
+	ENDC = '\033[0m'
+
 eipList = []
 eipStringList = []
 
@@ -27,17 +36,21 @@ def eip():
 		sys.stderr.write(res)
 
 def snap():
+	snapshotSum = 0
 	snapshotList = []
-	snapshotDiscoveredStr = 'snap-0764aab316279fc88	2022-03-18T11:18:52.965Z	2\nsnap-6664aab316279fc88	2022-03-18T11:18:52.965Z	5\nsnap-9064ccb316279fc88	2022-03-18T11:18:52.965Z	4\n'
+	snapshotDiscoveredStr = 'snap-0764aab316279fc88	2022-03-18T11:18:52.965Z	2\nsnap-6664aab316279fc88	2022-03-18T11:18:52.965Z	5\nsnap-9064ccb316279fc88	2022-03-18T11:18:52.965Z	3\n'
 	if snapshotDiscoveredStr:
 		snapshotDiscoveredList = snapshotDiscoveredStr[:-1].split('\n')
 		newSnapshotDiscoveredStr = f'[{region}]\n'
 		for i in range(len(snapshotDiscoveredList)):
 			snapshotStringList = snapshotDiscoveredList[i].split('\t')
+			snapshotSum += int(snapshotStringList[2])
 			if int(snapshotStringList[2]) >= 5 and freetire:
-				newSnapshotDiscoveredStr += f'{snapshotStringList[0]}\t{snapshotStringList[1]}\t{snapshotStringList[2]} >= 5Gb included in freetire\n'
+				newSnapshotDiscoveredStr += f'{snapshotDiscoveredList[i]} >= 5Gb freetire overuse\n'
 			else:
 				newSnapshotDiscoveredStr += f'{snapshotDiscoveredList[i]}\n'
+		if freetire and snapshotSum > 5:
+			newSnapshotDiscoveredStr += f'{bcolors.WARN}Sum of snapshots overuse freetire -> {snapshotSum}Gb{bcolors.ENDC}\n'
 
 		snapshotList.append(newSnapshotDiscoveredStr)
 
